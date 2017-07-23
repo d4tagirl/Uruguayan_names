@@ -1,0 +1,45 @@
+PackratFormat: 1.4
+PackratVersion: 0.4.8.1
+RVersion: 3.3.1
+Repos: CRAN=https://cran.rstudio.com/
+
+Package: BH
+Source: CRAN
+Version: 1.62.0-1
+
+Package: R6
+Source: CRAN
+Version: 2.2.1
+Hash: 530f0b839551f96ec991ce4f93156ee1
+
+Package: Rcpp
+Source: CRAN
+Version: 0.12.11
+Hash: 2ee22f3b5e75dec80b1d8eca61cd96d8
+
+Package: hms
+Source: CRAN
+Version: 0.3
+Hash: 3fca8a1c97e6cfb297fe3f4690f82c58
+
+Package: packrat
+Source: CRAN
+Version: 0.4.8-1
+Hash: 6ad605ba7b4b476d84be6632393f5765
+
+Package: readr
+Source: CRAN
+Version: 1.1.1
+Requires: BH, R6, Rcpp, hms, tibble
+Hash: 36bb0e1dc92b38dc4ebf419fdfa5cc7f
+
+Package: rlang
+Source: CRAN
+Version: 0.1.1
+Hash: 86c53487ce7f82f0a7cc11c816060910
+
+Package: tibble
+Source: CRAN
+Version: 1.3.3
+Requires: Rcpp, rlang
+Hash: cff4362530fb71e27b84a02054bcb315
