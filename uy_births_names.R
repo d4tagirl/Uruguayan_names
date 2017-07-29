@@ -8,7 +8,7 @@ library(broom)
 library(stringi)
 library(viridis)
 
-raw <- read_csv("data/nombre_nacim_x_anio_sexo.csv", col_names = FALSE) %>%
+raw <- read_csv("uy_names/nombre_nacim_x_anio_sexo.csv", col_names = FALSE) %>%
   rename(year = X1,
          sex  = X2,
          name = X3,
@@ -74,7 +74,9 @@ slopes <- names_year_counts %>%
   mutate(models = map(data, ~ lm(percent_name ~ year, .))) %>%
   unnest(map(models, tidy)) %>%
   filter(term == "year") %>%
-  arrange(desc(estimate))
+  arrange(desc(estimate)) %>%
+  mutate(p.adjusted = p.adjust(p.value)) %>%
+  filter(p.adjusted < .05)
 
 head(slopes, 12) %>% bind_rows(tail(slopes, 12)) %>%
   ggplot(aes(reorder(name, estimate), estimate, fill = reorder(name, estimate))) +

@@ -97,9 +97,11 @@ nombres_año %>%
   coord_flip() +
   theme_minimal(base_size = 14) +
   theme(legend.position = "none") +
-  scale_fill_viridis(discrete = TRUE)
+  scale_fill_viridis(discrete = TRUE) +
+  ggtitle("Nombres menos frecuentes") +
+  labs(subtitle = "que se registraron más de 200 veces")
 
-ggsave(filename = here("", "nombres_menos_usados.png"), width = 5, height = 4, dpi = 140)
+ggsave(filename = here("", "nombres_menos_usados.png"), dpi = 100)
 
 
 library(magick) 
@@ -114,4 +116,6 @@ frames <- lapply(gif, function(frame) {
 
 animation <- image_animate(image_join(frames))
 
-animation
+image_write(animation, "nombres_menos_usados.gif")
+
+
