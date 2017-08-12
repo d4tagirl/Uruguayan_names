@@ -49,18 +49,29 @@ spline_predictions <- names_year_counts %>%
   mutate(ratio = .fitted / average)
 
 
+build_df <- function(i) {
+  names_year_counts %>%
+    filter(name %in% unlist(i)) %>%
+    complete(year, fill = list(freq = 0)) %>% 
+    group_by(year) %>% 
+    summarise(freq = sum(freq),
+              name = paste0(name, collapse = "+")) 
+}
+
+
 
                   ######
                   # UI #
                   ######
 
 
-ui <- navbarPage("Nombres en Uruguay",
+ui <- navbarPage("Nombres en Montevideo",
                  tabPanel("Qué tan usado es tu nombre?",
                           sidebarLayout(
                             sidebarPanel(
                               # # App input
-                              textInput("name", "Escribí (y borrá) los nombres que querés graficar:", "Maria Pablo"),
+                              textInput("name", "Escribí (y borrá) los nombres que querés graficar:", 
+                                        "Daniel Gerardo+Daniela"),
                               htmlOutput("text"),
                               hr(),
                               htmlOutput("text3")
@@ -69,8 +80,8 @@ ui <- navbarPage("Nombres en Uruguay",
                             # Show a plot
                             mainPanel(
                               htmlOutput("text2"),
-                              plotlyOutput("namePlot"
-                                           ,width = "auto"
+                              plotlyOutput("namePlot", 
+                                           width = "auto"
                                            )
                               )
                             )
@@ -140,27 +151,39 @@ ui <- navbarPage("Nombres en Uruguay",
 
 server <- function(input, output) {
 
-  
-  
   selected_name <- reactive({
-    names_in_input <- strsplit(input$name, "[, :;-]+") %>% unlist
+    
+    valid_names <- stri_trans_general(trimws(toupper(input$name)), "latin-ascii") %>% 
+      strsplit("[, :;\\-\\+]+") %>% 
+      unlist
+    valid_names <- valid_names[valid_names %in% unique(names_year_counts$name)]
+    
+    names_in_input <- 
+      stri_trans_general(trimws(toupper(input$name)), "latin-ascii") %>% 
+      strsplit("[, :;\\-]+") %>% 
+      unlist %>% 
+      map(., function(x) {
+        each <- strsplit(x,"[+]+" ) %>% unlist
+        each[each %in% valid_names]
+        }) %>% 
+      Filter(length, .)
 
     validate(need(
-      stri_trans_general(trimws(toupper(names_in_input)), "latin-ascii") %in% unique(names_year_counts$name),
+      valid_names %in% unique(names_year_counts$name),
       message = ""))
-
-    names_year_counts %>%
-      filter(name %in% stri_trans_general(trimws(toupper(names_in_input)), "latin-ascii"))
+    
+    names_in_input %>% 
+      map(build_df) %>% 
+      bind_rows()
+      
     })
  
-  
-  
-   
+
   name_not_found <- reactive({
-    names_in_input <- strsplit(input$name, "[, :;-]+") %>% unlist
-    names_in_input_and_db <- stri_trans_general(trimws(toupper(names_in_input)), "latin-ascii") %in% unique(names_year_counts$name)
-    names_in_input[names_in_input_and_db == FALSE] %>% 
+    invalid_names <- stri_trans_general(trimws(toupper(input$name)), "latin-ascii") %>% 
+      strsplit("[, :;\\-\\+]+") %>% 
       unlist
+    invalid_names[!invalid_names %in% unique(names_year_counts$name)]
   })
   
   
@@ -212,24 +235,34 @@ server <- function(input, output) {
 
 
   output$text2 <- renderText({
-    names_in_input <- strsplit(input$name, "[, :;-]+") %>% unlist
     
-    if (length(names_in_input) > 0){ 
+    names_in_input <- 
+      stri_trans_general(trimws(toupper(input$name)), "latin-ascii") %>% 
+      strsplit("[, :;\\-]+") %>% 
+      unlist %>% 
+      map(., function(x) {
+        strsplit(x,"[+]+" ) %>% unlist
+      })
+    
+    names_in_input_unlist <- unlist(names_in_input)
+    
+    if (length(names_in_input_unlist) > 0) { 
       validate(need(
-        stri_trans_general(trimws(toupper(names_in_input)), "latin-ascii") %in% unique(names_year_counts$name)
-        , message = "No hay nadie con ese nombre, probá otro!"
-      ))} else {
+        names_in_input_unlist %in% unique(names_year_counts$name), 
+        message = "No hay nadie con ese nombre, probá otro!"
+      ))
+      } else {
         validate(need(
-          stri_trans_general(trimws(toupper(names_in_input)), "latin-ascii") %in% unique(names_year_counts$name)
-          , message = "Ingresá un nombre!"))
+          names_in_input_unlist %in% unique(names_year_counts$name), 
+          message = "Ingresá un nombre!"))
         }
     
-    HTML("<center><span style='font-size: 18px;'>Cantidad de personas registradas <br /> con el nombre por año</span></center>")
+    HTML("<center><span style='font-size: 18px;'>Cantidad de nombres registrados <br /> por año</span></center>")
   })
   
-  output$namePlot <- renderPlotly({# reactive input
-  
-    ggplotly(selected_name() %>%
+  output$namePlot <- renderPlotly({         # reactive input
+    
+    ggplotly(selected_name() %>% 
                ggplot(aes(year, freq, colour = name,
                           text = paste('año: ', year,
                                        '<br /> cantidad : ', freq))) +
@@ -241,11 +274,11 @@ server <- function(input, output) {
                xlab(" \n Pasá el mouse por arriba del gráfico para ver más información!") +
                theme(axis.title.x = element_text(size = 10, colour = "darkgrey"),
                      axis.title.y = element_blank(),
-                     axis.line = element_line(colour = "grey"), 
+                     axis.line = element_line(colour = "grey"),
                      legend.title = element_blank(),
                      legend.position = 'bottom',
                      panel.grid.major = element_blank(), panel.border = element_blank(),
-                     plot.title = element_text(vjust = 3)) ,
+                     plot.title = element_text(vjust = 3)),
              tooltip = 'text')
 
   })
@@ -309,7 +342,7 @@ server <- function(input, output) {
       ggplot(aes(year, freq, color = name)) +
       geom_line() +
       facet_wrap( ~ reorder(name, desc(freq))) +
-      theme_minimal(base_size = 15)+
+      theme_minimal(base_size = 15) +
       ggtitle("Nombres con crecimiento excepcional  \n en el rango de años") +
       theme(legend.position = "none",
             axis.text.x = element_text(angle = 90, hjust = 1),
