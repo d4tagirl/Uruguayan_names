@@ -1,6 +1,6 @@
 packrat/lib*/
 .Rproj.user
-uy_names/rsconnect/
+rsconnect/
 .RData
 .Rhistory
 packrat/src/

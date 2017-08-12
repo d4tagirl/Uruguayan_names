@@ -5,6 +5,7 @@ library(tidyr)
 library(ggplot2)
 library(plotly)
 library(stringi)
+library(stringr)
 library(purrr)
 library(broom)
 library(viridis)
@@ -58,7 +59,7 @@ build_df <- function(i) {
               name = paste0(name, collapse = "+")) 
 }
 
-
+mobile_regex <- "/Android Webkit Browser|BlackBerry|Blazer|Bolt|Browser for S60|Doris|Dorothy|Fennec|Go Browser|IE Mobile|Iris|Maemo Browser|MIB|Minimo|NetFront|Opera Mini|Opera Mobile|SEMC-Browser|Skyfire|TeaShark|Teleca-Obigo|uZard Web"
 
                   ######
                   # UI #
@@ -79,13 +80,17 @@ ui <- navbarPage("Nombres en Montevideo",
                             
                             # Show a plot
                             mainPanel(
-                              htmlOutput("text2"),
-                              plotlyOutput("namePlot", 
-                                           width = "auto"
-                                           )
+                              htmlOutput("text2")
+                              ,
+                              
+                              conditionalPanel(condition = "output.mobile == false",
+                                               plotlyOutput("Plotly"))
+                              ,
+                              conditionalPanel(condition = "output.mobile != false",
+                                               plotOutput("Plot"))
                               )
-                            )
-                          ),
+                              )
+                            ),
                  
                  tabPanel("Los más usados",
                           sidebarLayout(
@@ -149,7 +154,21 @@ ui <- navbarPage("Nombres en Montevideo",
                 # SERVER #
                 ##########
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+
+  output$ag.mobile <- renderText(
+    str_detect(session$request$HTTP_USER_AGENT, mobile_regex)
+  )
+  outputOptions(output, "ag.mobile", suspendWhenHidden = FALSE)
+  
+  output$mobile <- reactive(
+    str_detect(session$request$HTTP_USER_AGENT, mobile_regex)
+  )
+  outputOptions(output, "mobile", suspendWhenHidden = FALSE)
+  
+  mobile <- reactive({
+    str_detect(session$request$HTTP_USER_AGENT, mobile_regex)
+  })
 
   selected_name <- reactive({
     
@@ -260,7 +279,7 @@ server <- function(input, output) {
     HTML("<center><span style='font-size: 18px;'>Cantidad de nombres registrados <br /> por año</span></center>")
   })
   
-  output$namePlot <- renderPlotly({         # reactive input
+  output$Plotly <- renderPlotly({         # reactive input
     
     ggplotly(selected_name() %>% 
                ggplot(aes(year, freq, colour = name,
@@ -282,6 +301,28 @@ server <- function(input, output) {
              tooltip = 'text')
 
   })
+  outputOptions(output, "Plotly", suspendWhenHidden = FALSE)
+  
+  output$Plot <- renderPlot({
+    selected_name() %>%
+     ggplot(aes(year, freq, colour = name,
+                text = paste('año: ', year,
+                             '<br /> cantidad : ', freq))) +
+     geom_line(aes(group = unlist(name))) +
+     geom_point(size = 0.8) +
+     scale_y_continuous(expand = c(0, 0)) +
+     expand_limits(y = c(0, 1.1 * max(selected_name()$freq))) +
+     theme_minimal(base_size = 15) +
+     theme(axis.title.x = element_text(size = 10, colour = "darkgrey"),
+           axis.title.y = element_blank(),
+           axis.line = element_line(colour = "grey"),
+           legend.title = element_blank(),
+           legend.position = 'bottom',
+           panel.grid.major = element_blank(), 
+           panel.border = element_blank(),
+           plot.title = element_text(vjust = 3))
+  })
+  outputOptions(output, "Plot", suspendWhenHidden = FALSE)
   
   
   slopes <- reactive({    
