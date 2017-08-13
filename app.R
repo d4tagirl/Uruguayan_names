@@ -59,7 +59,7 @@ build_df <- function(i) {
               name = paste0(name, collapse = "+")) 
 }
 
-mobile_regex <- "/Android Webkit Browser|BlackBerry|Blazer|Bolt|Browser for S60|Doris|Dorothy|Fennec|Go Browser|IE Mobile|Iris|Maemo Browser|MIB|Minimo|NetFront|Opera Mini|Opera Mobile|SEMC-Browser|Skyfire|TeaShark|Teleca-Obigo|uZard Web"
+mobile_regex <- "((iPhone)|(iPod)|(iPad)|(Android)|(BlackBerry))"
 
                   ######
                   # UI #
