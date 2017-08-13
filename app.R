@@ -82,7 +82,7 @@ ui <- navbarPage("Nombres en Montevideo",
                             mainPanel(
                               htmlOutput("text2")
                               ,
-                              
+                              textOutput("ag.mobile"),
                               conditionalPanel(condition = "output.mobile == false",
                                                plotlyOutput("Plotly"))
                               ,
@@ -157,7 +157,7 @@ ui <- navbarPage("Nombres en Montevideo",
 server <- function(input, output, session) {
 
   output$ag.mobile <- renderText(
-    str_detect(session$request$HTTP_USER_AGENT, mobile_regex)
+    session$request$HTTP_USER_AGENT
   )
   outputOptions(output, "ag.mobile", suspendWhenHidden = FALSE)
   
