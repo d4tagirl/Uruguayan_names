@@ -65,6 +65,14 @@ mobile_regex <- "((iPhone)|(iPod)|(iPad)|(Android)|(BlackBerry))"
                   # UI #
                   ######
 
+mobileDetect <- function(inputId, value = 0) {
+  tagList(
+    singleton(tags$head(tags$script(src = "js/mobile.js"))),
+    tags$input(id = inputId,
+                class = "mobile-element",
+                type = "hidden")
+  )
+}
 
 ui <- navbarPage("Nombres en Montevideo",
                  tabPanel("Qué tan usado es tu nombre?",
@@ -80,9 +88,9 @@ ui <- navbarPage("Nombres en Montevideo",
                             
                             # Show a plot
                             mainPanel(
+                              mobileDetect('isMobile'),
                               htmlOutput("text2")
                               ,
-                              textOutput("ag.mobile"),
                               conditionalPanel(condition = "output.mobile == false",
                                                plotlyOutput("Plotly"))
                               ,
@@ -156,18 +164,13 @@ ui <- navbarPage("Nombres en Montevideo",
 
 server <- function(input, output, session) {
 
-  output$ag.mobile <- renderText(
-    session$request$HTTP_USER_AGENT
-  )
-  outputOptions(output, "ag.mobile", suspendWhenHidden = FALSE)
-  
   output$mobile <- reactive(
-    str_detect(session$request$HTTP_USER_AGENT, mobile_regex)
+    input$isMobile
   )
   outputOptions(output, "mobile", suspendWhenHidden = FALSE)
   
   mobile <- reactive({
-    str_detect(session$request$HTTP_USER_AGENT, mobile_regex)
+    input$isMobile
   })
 
   selected_name <- reactive({
