@@ -402,7 +402,7 @@ server <- function(input, output, session) {
   
   output$text3 <- renderText({
     
-    HTML("<span style='color:grey;'>Hecho con <3 por <a href='https://twitter.com/d4tagirl'>@d4tagirl</a>.<br />Datos: <a href='https://catalogodatos.gub.uy'>https://catalogodatos.gub.uy</a>")
+    HTML("<span style='color:grey;'>Hecho con <3 por <a href='https://twitter.com/d4tagirl'>@d4tagirl</a>.<br />Datos: <a href='https://catalogodatos.gub.uy'>https://catalogodatos.gub.uy</a>.<br /><a href='https://d4tagirl.com/2017/08/uruguay-el-pais-de-los-nombres-raros'>Mirá mi análisis de los datos acá.</a>")
   })
   
   
