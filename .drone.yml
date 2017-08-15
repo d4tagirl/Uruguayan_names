@@ -1,0 +1,22 @@
+pipeline:
+  build:
+    image: g3rv4/docker
+    commands:
+      - "mkdir -p ~/.ssh"
+      - "echo \"$${SSH_DEPLOY}\" | tr \"|\" \"\n\" > ~/.ssh/id_rsa"
+      - "chmod 0600 ~/.ssh/id_rsa"
+      - "git config --global user.name \"Deploy system\""
+      - "git config --global user.email \"gmc+deploy@gmc.uy\""
+      - "ssh-keyscan github.com >> ~/.ssh/known_hosts"
+      - "git clone git@github.com:d4tagirl/shiny-apps.git"
+      - "cd shiny-apps"
+      - "git rm uy-names"
+      - "git submodule add https://github.com/d4tagirl/uruguayan_names.git uy-names"
+      - "cd uy-names"
+      - "git log -1 --pretty=%B > /message.txt"
+      - "cat /message.txt"
+      - "cd .."
+      - "git add ."
+      - "git commit -F /message.txt"
+      - "git push"
+    secrets: [ssh_deploy]
